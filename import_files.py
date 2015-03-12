@@ -29,6 +29,8 @@ from mediagoblin import mg_globals
 
 if __name__ == "__main__":
     mg_dir = os.path.dirname(mediagoblin.__path__[0])
+    if mg_dir == "":
+        mg_dir = "./"
     if os.path.exists(mg_dir + "/mediagoblin_local.ini"):
         config_file = mg_dir + "/mediagoblin_local.ini"
     elif os.path.exists(mg_dir + "/mediagoblin.ini"):
@@ -119,6 +121,7 @@ class ImportCommand(object):
                 path = os.path.join(folder_path, new_filename.decode('utf8'))
                 second_exception = False
 
+                entry = None
                 while True:
                     try:
                         entry = self.import_file(MockMedia(
