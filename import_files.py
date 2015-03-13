@@ -49,7 +49,7 @@ if __name__ == "__main__":
 import sqlalchemy.exc
 from mediagoblin.db.base import Session
 from mediagoblin.media_types import FileTypeNotSupported
-from mediagoblin.media_types import get_media_type_and_manager
+from mediagoblin.media_types import type_match_handler
 from mediagoblin.submit.lib import run_process_media
 from mediagoblin.tools.text import convert_to_tag_list_of_dicts
 from mediagoblin.user_pages.lib import add_media_to_collection
@@ -62,10 +62,12 @@ CACHE_DIR = 'mg_cache'
 
 class MockMedia():
     filename = ""
+    name = ""
     stream = None
 
     def __init__(self, filename, stream):
         self.filename = filename
+        self.name = filename
         self.stream = stream
 
     def read(self, *args, **kwargs):
@@ -178,7 +180,8 @@ class ImportCommand(object):
     def import_file(self, media):
         try:
             media_type, media_manager = (
-                get_media_type_and_manager(media.filename))
+                #get_media_type_and_manager(media.filename))
+                type_match_handler(media,media.filename))
         except FileTypeNotSupported:
             print u"File type not supported: {0}".format(media.filename)
             return
