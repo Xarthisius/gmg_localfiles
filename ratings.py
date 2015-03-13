@@ -32,7 +32,7 @@ def set_rating_from_media_entry(media_entry, rating):
 
 
 def set_rating(path, rating):
-    fn, ext = os.path.splitext(new_filename)
+    fn, ext = os.path.splitext(path)
     if ext.lower() not in ACCEPTED_EXTENSIONS:
         return
 
@@ -42,7 +42,7 @@ def set_rating(path, rating):
 
 
 def get_rating(path):
-    fn, ext = os.path.splitext(new_filename)
+    fn, ext = os.path.splitext(path)
     if ext.lower() not in ACCEPTED_EXTENSIONS:
         return None
 
