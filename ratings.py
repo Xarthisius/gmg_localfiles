@@ -8,11 +8,12 @@
 #    import ipdb; ipdb.set_trace()
 
 import re
+import os
 
 from mediagoblin import mg_globals as mgg
+from mediagoblin.media_types.image import ACCEPTED_EXTENSIONS
 
 from .metadata import Metadata
-
 
 def media_added_to_collection(collection, media_entry, note):
     m = re.match(r'rating:(\d+)', collection.title)
@@ -31,11 +32,19 @@ def set_rating_from_media_entry(media_entry, rating):
 
 
 def set_rating(path, rating):
+    fn, ext = os.path.splitext(new_filename)
+    if ext.lower() not in ACCEPTED_EXTENSIONS:
+        return
+
     md = Metadata.from_potential_sidecar(path)
     md.rating = rating
     md.save()
 
 
 def get_rating(path):
+    fn, ext = os.path.splitext(new_filename)
+    if ext.lower() not in ACCEPTED_EXTENSIONS:
+        return None
+
     md = Metadata.from_potential_sidecar(path)
     return md.rating
