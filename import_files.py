@@ -28,7 +28,7 @@ from mediagoblin.app import MediaGoblinApp
 from mediagoblin import mg_globals
 
 import logging
-MediaGoblinApp._log.setLevel(logging.DEBUG)
+mediagoblin.app._log.setLevel(logging.DEBUG)
 
 if __name__ == "__main__":
     mg_dir = os.path.dirname(mediagoblin.__path__[0])
