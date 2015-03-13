@@ -83,6 +83,7 @@ class ImportCommand(object):
     def __init__(self, db, base_dir, **kwargs):
         self.db = db
         self.base_dir = base_dir
+        self.abs_cache_dir = os.path.join(base_dir, CACHE_DIR)
 
     def handle(self):
         #Photo.objects.all().delete()
@@ -130,7 +131,7 @@ class ImportCommand(object):
                 while True:
                     try:
                         entry = self.import_file(MockMedia(
-                            filename=path, stream=open(path, 'r')))
+                            filename=os.path.abspath(path), stream=open(path, 'r')))
                         break
                     except (sqlalchemy.exc.InvalidRequestError,
                             sqlalchemy.exc.OperationalError) as exc:
@@ -171,7 +172,8 @@ class ImportCommand(object):
             collection.generate_slug()
             collection.save()
             Session.commit()
-        for entry in entries:
+        for entry_id in entries:
+            entry = self.db.MediaEntry.query.filter_by(id=entry_id).first()
             add_media_to_collection(collection, entry, commit=False)
         try:
             Session.commit()
@@ -205,12 +207,13 @@ class ImportCommand(object):
 
         try:
             entry.save()
+            entry_id = entry.id
             run_process_media(entry)
             Session.commit()
+            return entry_id
         except Exception:
             Session.rollback()
             raise
-        return entry
 
 
 if __name__ == "__main__":
