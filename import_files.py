@@ -70,7 +70,7 @@ class MockMedia():
 
     def __init__(self, filename, stream):
         self.filename = filename
-        self.name = filename
+        self.name = os.path.abspath(filename)
         self.stream = stream
 
     def read(self, *args, **kwargs):
@@ -131,7 +131,7 @@ class ImportCommand(object):
                 while True:
                     try:
                         entry = self.import_file(MockMedia(
-                            filename=os.path.abspath(path), stream=open(path, 'r')))
+                            filename=path, stream=open(path, 'r')))
                         break
                     except (sqlalchemy.exc.InvalidRequestError,
                             sqlalchemy.exc.OperationalError) as exc:
