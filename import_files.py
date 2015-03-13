@@ -27,8 +27,6 @@ import mediagoblin
 from mediagoblin.app import MediaGoblinApp
 from mediagoblin import mg_globals
 
-import logging
-mediagoblin.app._log.setLevel(logging.DEBUG)
 
 if __name__ == "__main__":
     mg_dir = os.path.dirname(mediagoblin.__path__[0])
@@ -59,6 +57,8 @@ from mediagoblin.user_pages.lib import add_media_to_collection
 
 from . import ratings
 
+import logging
+mediagoblin.media_types._log.setLevel(logging.DEBUG)
 
 CACHE_DIR = 'mg_cache'
 
