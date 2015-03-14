@@ -105,14 +105,6 @@ class ImportCommand(object):
             #        .get_or_create(path=os.path.normpath(top) + "/",
             #                defaults={'name': os.path.basename(top)})
             folder_path = os.path.normpath(top.decode('utf8'))
-            new_folder = not os.path.exists(
-                os.path.join(CACHE_DIR, folder_path))
-
-            if new_folder:
-                print u"Processing folder {0}".format(folder_path)
-            else:
-                print u"Existing folder {0}".format(folder_path)
-                continue
 
             added_entries = []
             for new_filename in sorted(files, reverse=True):
@@ -125,8 +117,16 @@ class ImportCommand(object):
                         print "skip", fn, ext
                         continue
                 path = os.path.join(folder_path, new_filename.decode('utf8'))
-                second_exception = False
 
+                new_file = True
+
+                if new_folder:
+                    print u"Processing file {0}".format(path)
+                else:
+                    print u"Existing file {0}".format(path)
+                    continue
+
+                second_exception = False
                 entry = None
                 while True:
                     try:
