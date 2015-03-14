@@ -1,6 +1,5 @@
  gmg\_localfiles, plugin for GNU MediaGoblin
 ============================================
-
 Plugin for importing files from your filesystem without duplication.
 
 This plugin lets you have all your original files in one folder on your file
@@ -10,9 +9,16 @@ locations.
 It will try to make mediagoblin not touch/ruin your files (no guarantees!), but
 it will make a `mg_cache` folder in the directory.
 
-The plugin has currently been tested on what will become MediaGoblin 0.7.
+If transcoding is required for videos, they will be made within the `mg_cache` folder. See [the wiki](https://wiki.mediagoblin.org/Configure_MediaGoblin#Disable_transcoding) for an example of how to configure this to minimise the amount of transcoding required.
 
+The plugin has currently been tested on what will become MediaGoblin 0.8.
 
+Installation
+------------
+Clone `gmg_localfiles` into `mediagoblin/plugins/gmg_localfiles` in your mediagoblin directory.
+
+Configuration
+-------------
 Example setup in `mediagoblin.ini`:
 
     [storage:queuestore]
@@ -25,7 +31,7 @@ Example setup in `mediagoblin.ini`:
     storage_class = gmg_localfiles.storage:PersistentFileStorage
 
     [plugins]
-    [[gmg_localfiles]]
+    [[mediagoblin.plugins.gmg_localfiles]]
 
 You will also need to serve the files, so in `paste.ini`:
 
@@ -33,13 +39,7 @@ You will also need to serve the files, so in `paste.ini`:
     use = egg:Paste#static
     document_root = %(here)s/user_dev/media/public/
 
-Installation
-------------
-
-Put `gmg_localfiles` somewhere on your Python path. You might even just put it
-inside the MediaGoblin folder if you want to be done with it quickly ;-)
 
 Running
 -------
-
-Go into the `gmg_localfiles` folder and run `python import_files.py`.
+From the mediagoblin root folder run `python -m mediagoblin.plugins.gmg_localfiles.import_files`.
