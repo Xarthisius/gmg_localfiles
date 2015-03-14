@@ -120,7 +120,7 @@ class ImportCommand(object):
 
                 new_file = True
 
-                if new_folder:
+                if new_file:
                     print u"Processing file {0}".format(path)
                 else:
                     print u"Existing file {0}".format(path)
