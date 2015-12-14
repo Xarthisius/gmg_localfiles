@@ -50,15 +50,13 @@ if __name__ == "__main__":
 import sqlalchemy.exc
 from mediagoblin.db.base import Session
 from mediagoblin.media_types import FileTypeNotSupported
-from mediagoblin.media_types import type_match_handler
+from mediagoblin.media_types import get_media_type_and_manager
 from mediagoblin.submit.lib import run_process_media
 from mediagoblin.tools.text import convert_to_tag_list_of_dicts
 from mediagoblin.user_pages.lib import add_media_to_collection
 
-from . import ratings
-
 import logging
-mediagoblin.media_types._log.setLevel(logging.DEBUG)
+mediagoblin.media_types._log.setLevel(logging.INFO)
 
 CACHE_DIR = 'mg_cache'
 
@@ -96,7 +94,7 @@ class ImportCommand(object):
             if '/.' in top:
                 continue
             # Skip cache folders
-            if CACHE_DIR + '/' in top:
+            if top.endswith(CACHE_DIR):
                 continue
             if top == '.':
                 top = u''
@@ -152,10 +150,6 @@ class ImportCommand(object):
                 if not entry:
                     continue
                 added_entries.append(entry)
-                rating = ratings.get_rating(path)
-                if rating:
-                    self.add_to_collection('rating:{}'.format(rating),
-                                           [entry])
             self.add_to_collection(u'roll:{}'.format(folder_path),
                                    added_entries)
 
@@ -163,12 +157,13 @@ class ImportCommand(object):
         if not entries:
             return
         collection = (self.db.Collection.query
-                      .filter_by(creator=1, title=collection_title)
+                      .filter_by(actor=1, title=collection_title)
                       .first())
         if not collection:
             collection = self.db.Collection()
             collection.title = collection_title
-            collection.creator = 1
+            collection.actor = 1
+            collection.type = "myfancytype"
             collection.generate_slug()
             collection.save()
             Session.commit()
@@ -185,16 +180,21 @@ class ImportCommand(object):
     def import_file(self, media):
         try:
             media_type, media_manager = (
-                #get_media_type_and_manager(media.filename))
-                type_match_handler(media,media.filename))
+                get_media_type_and_manager(media.filename))
         except FileTypeNotSupported:
             print u"File type not supported: {0}".format(media.filename)
             return
+
+        fname = unicode(os.path.basename(media.name))
+
+        if self.db.MediaEntry.query.filter_by(title=fname).first():
+            print("Skipping {0} - file exists".format(fname))
+            return
         entry = self.db.MediaEntry()
         entry.media_type = unicode(media_type)
-        entry.title = unicode(
-            os.path.basename(os.path.splitext(media.filename)[0]))
+        entry.title = unicode(os.path.basename(media.name))
 
+        entry.actor = 1
         entry.uploader = 1
         # Process the user's folksonomy "tags"
         entry.tags = convert_to_tag_list_of_dicts("")
