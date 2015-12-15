@@ -47,7 +47,6 @@ if __name__ == "__main__":
         mg_globals.global_config,
         force_celery_always_eager=True)
 
-import sqlalchemy.exc
 from mediagoblin.db.base import Session
 from mediagoblin.media_types import FileTypeNotSupported
 from mediagoblin.media_types import get_media_type_and_manager
@@ -58,10 +57,8 @@ from mediagoblin.user_pages.lib import add_media_to_collection
 import logging
 mediagoblin.media_types._log.setLevel(logging.INFO)
 
-CACHE_DIR = 'mg_cache'
-
-
 class MockMedia():
+    
     filename = ""
     name = ""
     stream = None
@@ -81,81 +78,19 @@ class ImportCommand(object):
     def __init__(self, db, base_dir, **kwargs):
         self.db = db
         self.base_dir = base_dir
-        self.abs_cache_dir = os.path.join(base_dir, CACHE_DIR)
 
-    def handle(self):
-        #Photo.objects.all().delete()
+    def handle(self, path):
+        try:
+            entry_id = self.import_file(MockMedia(
+                filename=path.decode('utf8'), stream=open(path, 'r')))
+        except Exception as exc:
+            print(u"[imp] Exception while importing "
+                  "file '{0}': {1}.".format(path, repr(exc)))
 
-        os.chdir(self.base_dir)
+        if entry_id is not None:
+            self.add_to_collection(u'roll:fido', entry_id)
 
-        for top, dirs, files in os.walk('.', followlinks=True):
-            dirs.sort()
-            # Skip hidden folders
-            if '/.' in top:
-                continue
-            # Skip cache folders
-            if top.endswith(CACHE_DIR):
-                continue
-            if top == '.':
-                top = u''
-
-            #folder, new_folder = Folder.objects.select_related("photos") \
-            #        .get_or_create(path=os.path.normpath(top) + "/",
-            #                defaults={'name': os.path.basename(top)})
-            folder_path = os.path.normpath(top.decode('utf8'))
-
-            added_entries = []
-            for new_filename in sorted(files, reverse=True):
-                # More than one file with the same name but different
-                # extension?
-                fn, ext = os.path.splitext(new_filename)
-                if ext.lower() != '.nef':
-                    if any(fn + ext in files for ext in ['.nef', '.NEF']):
-                        # Skip the non-nef file
-                        print "skip", fn, ext
-                        continue
-                path = os.path.join(folder_path, new_filename.decode('utf8'))
-
-                new_file = True
-
-                if new_file:
-                    print u"Processing file {0}".format(path)
-                else:
-                    print u"Existing file {0}".format(path)
-                    continue
-
-                second_exception = False
-                entry = None
-                while True:
-                    try:
-                        entry = self.import_file(MockMedia(
-                            filename=path, stream=open(path, 'r')))
-                        break
-                    except (sqlalchemy.exc.InvalidRequestError,
-                            sqlalchemy.exc.OperationalError) as exc:
-                        if not second_exception:
-                            print (u"[imp] Exception while importing file "
-                                   "'{0}': {1}. Trying again."
-                                   "".format(path, repr(exc)))
-                            second_exception = True
-                        else:
-                            print u"[imp] Giving up on {0}.".format(path)
-                            print u"Entries is this folder {0}: {1}".format(
-                                folder_path, [e.id for e in added_entries])
-                            raise
-                    except Exception as exc:
-                        print(u"[imp] Exception while importing "
-                              "file '{0}': {1}.".format(path, repr(exc)))
-                        break
-                if not entry:
-                    continue
-                added_entries.append(entry)
-            self.add_to_collection(u'roll:{}'.format(folder_path),
-                                   added_entries)
-
-    def add_to_collection(self, collection_title, entries):
-        if not entries:
-            return
+    def add_to_collection(self, collection_title, entry_id):
         collection = (self.db.Collection.query
                       .filter_by(actor=1, title=collection_title)
                       .first())
@@ -167,9 +102,8 @@ class ImportCommand(object):
             collection.generate_slug()
             collection.save()
             Session.commit()
-        for entry_id in entries:
-            entry = self.db.MediaEntry.query.filter_by(id=entry_id).first()
-            add_media_to_collection(collection, entry, commit=False)
+        entry = self.db.MediaEntry.query.filter_by(id=entry_id).first()
+        add_media_to_collection(collection, entry, commit=False)
         try:
             Session.commit()
         except Exception as exc:
