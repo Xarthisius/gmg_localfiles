@@ -79,10 +79,12 @@ class ImportCommand(object):
         self.db = db
         self.base_dir = base_dir
 
-    def handle(self, path):
+    def handle(self, filename):
+        entry_id = None
+        filepath = os.path.join(self.base_dir, filename)
         try:
             entry_id = self.import_file(MockMedia(
-                filename=path.decode('utf8'), stream=open(path, 'r')))
+                filename=filename.decode('utf8'), stream=open(filepath, 'r')))
         except Exception as exc:
             print(u"[imp] Exception while importing "
                   "file '{0}': {1}.".format(path, repr(exc)))
