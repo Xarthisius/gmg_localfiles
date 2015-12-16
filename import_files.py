@@ -57,8 +57,9 @@ from mediagoblin.user_pages.lib import add_media_to_collection
 import logging
 mediagoblin.media_types._log.setLevel(logging.INFO)
 
+
 class MockMedia():
-    
+
     filename = ""
     name = ""
     stream = None
@@ -87,7 +88,7 @@ class ImportCommand(object):
                 filename=filename.decode('utf8'), stream=open(filepath, 'r')))
         except Exception as exc:
             print(u"[imp] Exception while importing "
-                  "file '{0}': {1}.".format(path, repr(exc)))
+                  "file '{0}': {1}.".format(filepath, repr(exc)))
 
         if entry_id is not None:
             self.add_to_collection(u'roll:fido', entry_id)
